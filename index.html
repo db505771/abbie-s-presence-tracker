@@ -6,13 +6,13 @@
     <title>Roblox Live Status Overlay</title>
     <style>
         :root {
-            --bg-dark: #000000; /* Pure black background */
-            --overlay-bg: rgba(20, 20, 25, 0.85);
-            --color-offline: #71717a;
+            --bg-dark: transparent; /* Transparent page background */
+            --overlay-bg: rgba(20, 20, 25, 0.29); /* 29% opacity background */
+            --color-offline: #a1a1aa; 
             --color-online: #3b82f6;
             --color-ingame: #22c55e;
-            --text-light: #f4f4f5;
-            --text-muted: #71717a;
+            --text-light: #ffffff;    
+            --text-muted: #d4d4d8;    
         }
 
         body {
@@ -31,29 +31,36 @@
             width: 450px;
             background: var(--overlay-bg);
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 20px;
             padding: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            box-shadow: none; /* Prevents dark shadow tint at bottom */
             position: relative;
             overflow: hidden;
             transition: all 0.4s ease;
+            box-sizing: border-box;
         }
 
         @keyframes switchFlash {
-            0% { border-color: rgba(255,255,255,0.1); box-shadow: 0 0 0px transparent; }
+            0% { border-color: rgba(255,255,255,0.15); box-shadow: 0 0 0px transparent; }
             50% { border-color: var(--color-ingame); box-shadow: 0 0 30px rgba(34, 197, 148, 0.6); }
-            100% { border-color: rgba(255,255,255,0.1); box-shadow: 0 0 0px transparent; }
+            100% { border-color: rgba(255,255,255,0.15); box-shadow: 0 0 0px transparent; }
         }
 
         .live-card.game-changed {
             animation: switchFlash 1.2s ease-in-out;
         }
 
+        /* Header Layout: Keeps title and badge aligned without overlapping */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+
         .live-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
             padding: 6px 12px;
             border-radius: 30px;
             font-size: 0.75rem;
@@ -63,11 +70,13 @@
             align-items: center;
             gap: 6px;
             text-transform: uppercase;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
-        .badge-offline { background-color: rgba(113, 113, 122, 0.15); color: var(--color-offline); }
-        .badge-online { background-color: rgba(59, 130, 246, 0.15); color: var(--color-online); }
-        .badge-ingame { background-color: rgba(34, 197, 94, 0.15); color: var(--color-ingame); }
+        .badge-offline { background-color: rgba(255, 255, 255, 0.1); color: var(--color-offline); }
+        .badge-online { background-color: rgba(59, 130, 246, 0.2); color: var(--color-online); }
+        .badge-ingame { background-color: rgba(34, 197, 94, 0.2); color: var(--color-ingame); }
 
         .pulse-dot {
             width: 8px;
@@ -103,8 +112,8 @@
             height: 110px;
             border-radius: 14px;
             object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            background-color: #18181b;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(24, 24, 27, 0.29);
             display: block; 
         }
 
@@ -113,6 +122,7 @@
             display: flex;
             flex-direction: column;
             transition: text-align 0.3s ease;
+            overflow: hidden;
         }
 
         .details.centered {
@@ -126,7 +136,6 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             font-weight: 600;
-            margin-bottom: 4px;
         }
 
         .game-name {
@@ -144,9 +153,9 @@
         .duration-container {
             margin-top: 20px;
             padding: 12px 16px;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.29);
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             display: none;
             justify-content: space-between;
             align-items: center;
@@ -170,11 +179,12 @@
 <body>
 
     <div class="live-card" id="overlay-card">
-        <div id="status-badge" class="live-badge badge-offline">
-            <div class="pulse-dot"></div> <span id="status-text">Offline</span>
+        <div class="card-header">
+            <div class="status-label">Roblox Status Tracker</div>
+            <div id="status-badge" class="live-badge badge-offline">
+                <div class="pulse-dot"></div> <span id="status-text">Offline</span>
+            </div>
         </div>
-
-        <div class="status-label">Roblox Status Tracker</div>
         
         <div class="session-container">
             <img id="display-icon" class="game-thumbnail" src="https://via.placeholder.com/150/18181b/71717a?text=..." alt="Game Icon">
@@ -250,10 +260,8 @@
                 iconImg.src = data.image;
                 nameText.innerText = data.gameName;
 
-                // 🌟 FIX: Separated the status check from the clock check
                 if (currentStatus === "in game" || currentStatus === "online") {
                     
-                    // Only show duration wrapper if there is an active Clockify timer running
                     if (data.startTime) {
                         durationWrapper.style.display = "flex";
                         startClock(data.startTime);
